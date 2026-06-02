@@ -51,7 +51,8 @@ export default function AskPage() {
                 patientId,
                 question,
             });
-
+ 
+            
             setAnswer(res.data);
         } catch (err) {
             console.error(err);
@@ -215,7 +216,7 @@ text-slate-200">
                                         {answer.answer}
                                     </pre>
                                 </div>
- 
+
                                 <div className="mt-8">
                                     <h3 className="text-2xl font-bold text-white mb-6">
                                         Knowledge Statistics
@@ -226,10 +227,10 @@ text-slate-200">
                                         <div className="bg-blue-50 p-4 rounded-lg text-center">
                                             <p className="text-sm text-gray-600">
                                                 Total Nodes
-                                            </p>    
+                                            </p>
 
                                             <p className="text-2xl font-bold text-blue-700">
-                                                {answer.stats.totalNodes}
+                                                {answer?.stats?.totalNodes || 0}
                                             </p>
                                         </div>
 
@@ -239,7 +240,7 @@ text-slate-200">
                                             </p>
 
                                             <p className="text-2xl font-bold text-green-700">
-                                                {answer.stats.hospitalNodes}
+                                                {answer?.stats?.hospitalNodes || 0}
                                             </p>
                                         </div>
 
@@ -249,7 +250,7 @@ text-slate-200">
                                             </p>
 
                                             <p className="text-2xl font-bold text-yellow-700">
-                                                {answer.stats.departmentNodes}
+                                                {answer?.stats?.departmentNodes || 0}
                                             </p>
                                         </div>
 
@@ -259,7 +260,7 @@ text-slate-200">
                                             </p>
 
                                             <p className="text-2xl font-bold text-purple-700">
-                                                {answer.stats.patientNodes}
+                                                {answer?.stats?.patientNodes || 0}
                                             </p>
                                         </div>
 

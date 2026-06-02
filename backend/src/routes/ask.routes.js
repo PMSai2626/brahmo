@@ -34,7 +34,12 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Nodes
+    console.log("================================");
+    console.log("PATIENT FROM DATABASE");
+    console.log(JSON.stringify(patient, null, 2));
+    console.log("================================");
+
+    // Knowledge Nodes
     const { data: nodes, error: nodesError } = await supabase
       .from("knowledge_nodes")
       .select("*");
@@ -56,39 +61,9 @@ router.post("/", async (req, res) => {
       });
     }
 
-    // Department Filter
-    const filteredNodes = nodes.filter((node) => {
-      if (!node.department) {
-        return true;
-      }
-
-      return node.department === patient.department;
-    });
-
-    // Cohort Filter
-    const patientCohorts = patient.cohort_tags || [];
-
-    const cohortNodes = filteredNodes.filter((node) => {
-      if (!node.source_question_id) {
-        return true;
-      }
-
-      const sourceQuestion = questions.find(
-        (q) => q.id === node.source_question_id
-      );
-
-      if (!sourceQuestion) {
-        return true;
-      }
-
-      if (!sourceQuestion.cohort_tag) {
-        return true;
-      }
-
-      return patientCohorts.includes(
-        sourceQuestion.cohort_tag
-      );
-    });
+    // For current schema, keep all nodes
+    const filteredNodes = nodes;
+    const cohortNodes = filteredNodes;
 
     // Hospital Knowledge
     const hospitalKnowledge = cohortNodes.filter(
@@ -98,42 +73,41 @@ router.post("/", async (req, res) => {
     );
 
     // Department Knowledge
-    const departmentKnowledge = cohortNodes.filter(
-  (node) =>
-    node.department === patient.department
-);
+    const departmentKnowledge = [];
 
     // Patient Knowledge
-   const patientKnowledge = cohortNodes.filter(
-  node =>
-    node.hierarchy_level_id.includes(
-      patient.name.split(" ")[1].toUpperCase()
-    )
-);
+    const patientKnowledge = [];
 
     // Prompt Context
-  const context = `
+    const context = `
 You are a clinical AI assistant.
 
-Question:
+QUESTION:
 ${question}
 
-Hospital Knowledge:
-${hospitalKnowledge.map(n => n.content).join("\n")}
+PATIENT DETAILS:
 
-Department Knowledge:
-${departmentKnowledge.map(n => n.content).join("\n")}
+Name: ${patient.name}
+Age: ${patient.age}
+Gender: ${patient.gender}
+Diagnosis: ${patient.diagnosis}
+Fasting Schedule: ${patient.fasting_schedule}
 
-Patient Knowledge:
-${patientKnowledge.map(n => n.content).join("\n")}
+Medications:
+${JSON.stringify(patient.medications, null, 2)}
 
-Patient:
-${patient.name}
+HOSPITAL KNOWLEDGE:
+${nodes.map((node) => node.content).join("\n")}
 
-Conditions:
-${(patient.conditions || []).join(", ")}
+IMPORTANT RULES:
 
-Return your answer in this format:
+1. Use the patient details above.
+2. If age exists, use the age.
+3. If medications exist, use the medications.
+4. Do NOT say information is unavailable if it is clearly present.
+5. Use the patient diagnosis and medication list when answering.
+
+Return exactly:
 
 RECOMMENDATION:
 ...
@@ -148,35 +122,33 @@ ALTERNATIVE:
 ...
 `;
 
-    
-   const model = genAI.getGenerativeModel({
-  model: "gemini-3.5-flash",
-});
+    const model = genAI.getGenerativeModel({
+      model: "gemini-3.5-flash",
+    });
 
-const result = await model.generateContent(
-  context
-);
+    const result = await model.generateContent(context);
 
-const answer =
-  result.response.text();
+    const answer = result.response.text();
 
+    console.log("================================");
+    console.log("AI ANSWER");
+    console.log(answer);
+    console.log("================================");
 
-    res.json({
+    return res.json({
       question,
       answer,
-
       stats: {
         totalNodes: nodes.length,
-        hospitalNodes:
-          hospitalKnowledge.length,
-        departmentNodes:
-          departmentKnowledge.length,
-        patientNodes:
-          patientKnowledge.length,
+        hospitalNodes: hospitalKnowledge.length,
+        departmentNodes: departmentKnowledge.length,
+        patientNodes: patientKnowledge.length,
       },
     });
   } catch (err) {
-    res.status(500).json({
+    console.error(err);
+
+    return res.status(500).json({
       message: err.message,
     });
   }
