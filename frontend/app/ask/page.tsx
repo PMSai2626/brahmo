@@ -20,22 +20,30 @@ export default function AskPage() {
     }, []);
 
     const loadUsers = async () => {
-        try {
-            const res = await api.get("/users");
-            setUsers(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  try {
+    const res = await api.get("/users");
+
+    console.log("USERS:");
+    console.log(res.data);
+
+    setUsers(res.data);
+  } catch (err) {
+    console.error("USERS ERROR:", err);
+  }
+};
 
     const loadPatients = async () => {
-        try {
-            const res = await api.get("/patients");
-            setPatients(res.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  try {
+    const res = await api.get("/patients");
+
+    console.log("PATIENTS:");
+    console.log(res.data);
+
+    setPatients(res.data);
+  } catch (err) {
+    console.error("PATIENTS ERROR:", err);
+  }
+};
 
     const askQuestion = async () => {
         if (!userId || !patientId || !question) {
